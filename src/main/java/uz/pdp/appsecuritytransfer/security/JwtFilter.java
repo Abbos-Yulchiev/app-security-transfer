@@ -29,42 +29,18 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest httpServletRequest,
                                     HttpServletResponse httpServletResponse,
                                     FilterChain filterChain) throws ServletException, IOException {
-        /*Requestdan tokeni olish*/
         String token = httpServletRequest.getHeader("Authorization");
-        System.out.println(token);
-
-        /*Tokening borligini va tokenning boshlanishini Bearer mavjutligini tekshiryapmiz*/
         if (token != null && token.startsWith("Bearer")) {
-
-            /*Aynan tokeni o'zini qirqib oldik*/
             token = token.substring(7);
-
-            /*Tokeni validatsiyadan o'tlazdik(Token buzulmaganliginin, ishlash muddati yugamanganligini va h.k)*/
-            boolean validationToken = jwtProvider.validationToken(token);
-            if (validationToken) {
-
-                /*Tokeni ichidan usernamini olamiz*/
-                String username = jwtProvider.getUsernameFromToken(token);
-
-                /*Usernamedan userDetails oldik*/
-                UserDetails userDetails = myAuthService.loadUserByUsername(username);
-
-                /*userDetails orqali  Authentication yaratib oldik*/
+            boolean validateToken = jwtProvider.validateToken(token);
+            if (validateToken) {
+                String userName = jwtProvider.getUserNameFromToken(token);
+                UserDetails userDetails = myAuthService.loadUserByUsername(userName);
                 UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
-                        new UsernamePasswordAuthenticationToken(userDetails,
-                                null,
-                                userDetails.getAuthorities());
-
-                System.out.println(SecurityContextHolder.getContext().getAuthentication());
-
-                /*Systemaga kim kirganligini o'rnatib qo'ydik*/
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
-
-                System.out.println(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
-
             }
         }
-
         filterChain.doFilter(httpServletRequest, httpServletResponse);
     }
 }

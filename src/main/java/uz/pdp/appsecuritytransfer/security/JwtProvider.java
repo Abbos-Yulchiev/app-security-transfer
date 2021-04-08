@@ -5,32 +5,26 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
-
 @Component
 public class JwtProvider {
+    static long expireTime = 36000 * 1000 * 24;
+    static String secret = "ThisIsTopSecretKey";
 
-    static long expireTime = 36_000_000;
-    static final String secretKey = "ThisIsTokenKeyKeepSecret123";
-
-    public static String generateToken(String username) {
-
-        Date expireDate = new Date(System.currentTimeMillis() + expireTime);
-        String token = Jwts
+    public String generateToken(String userName) {
+        return Jwts
                 .builder()
-                .setSubject(username)
+                .setSubject(userName)
                 .setIssuedAt(new Date())
-                .setExpiration(expireDate)
-                .signWith(SignatureAlgorithm.HS512, secretKey)
+                .setExpiration(new Date(System.currentTimeMillis() + expireTime))
+                .signWith(SignatureAlgorithm.HS512, secret)
                 .compact();
-        return token;
     }
 
-    public boolean validationToken(String token) {
+    public boolean validateToken(String token) {
         try {
-
             Jwts
                     .parser()
-                    .setSigningKey(secretKey)
+                    .setSigningKey(secret)
                     .parseClaimsJws(token);
             return true;
         } catch (Exception e) {
@@ -38,22 +32,13 @@ public class JwtProvider {
         }
         return false;
     }
-
-    public String getUsernameFromToken(String token) {
-
+    public String getUserNameFromToken(String token){
         String username = Jwts
                 .parser()
-                .setSigningKey(secretKey)
+                .setSigningKey(secret)
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
-
         return username;
-    }
-
-    public static void main(String[] args) {
-
-        String token = generateToken("pdp");
-        System.out.println(token);
     }
 }
